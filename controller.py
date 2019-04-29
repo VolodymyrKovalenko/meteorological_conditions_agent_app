@@ -3,6 +3,8 @@ from geopy.geocoders import Nominatim
 from datetime import datetime,timedelta
 import requests, os
 from config import DARK_SKY_API_KEY
+import asyncio
+import aiohttp
 
 option_list = "exclude=currently,minutely,hourly,alerts&units=si"
 
@@ -15,6 +17,7 @@ class ForecastController:
    
     def getWeatherReports(self, data, latitude, longitude):
 
+        weather_reports = []
         date_from = data.get('date_from')
         date_to = data.get('date_to')
 
@@ -22,31 +25,49 @@ class ForecastController:
         d_to_date = datetime.strptime(date_to , '%Y-%m-%d')
         delta = d_to_date - d_from_date
 
-        weather_reports = []
-
-        for i in range(delta.days+1):
-            new_date = (d_from_date + timedelta(days=i)).strftime('%Y-%m-%d')
 
 
-            search_date = new_date+"T00:00:00"
-            response = requests.get("https://api.darksky.net/forecast/"+DARK_SKY_API_KEY+"/"+latitude+","+longitude+","+search_date+"?"+option_list)
-            json_res = response.json()
-            print(json_res)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        reports = [(self.get_async_reports(i, d_from_date, latitude, longitude,delta))
+                   for i in range(delta.days + 1)]
 
-            report_date = (d_from_date + timedelta(days=i)).strftime('%Y-%m-%d %A')
-            unit_type = '°F' if json_res['flags']['units'] == 'us' else '°C'
-            min_temperature = str(json_res['daily']['data'][0]['apparentTemperatureMin'])+unit_type
-            max_temperature = str(json_res['daily']['data'][0]['apparentTemperatureMax'])+unit_type
-
-            summary = json_res['daily']['data'][0]['summary']
-            icon = json_res['daily']['data'][0]['icon']
-            raining_chance = self.check_raining_chance(json_res)
-
-            report = WeatherReport(report_date, max_temperature, min_temperature, summary, raining_chance, icon)
+        reports = loop.run_until_complete(asyncio.gather(*reports))
+        for report in reports:
 
             weather_reports.append(report)
 
         return weather_reports
+
+    async def get_async_reports(self,i, d_from_date, latitude, longitude, delta):
+
+        async with aiohttp.ClientSession() as session:
+            report = self.fetch_report_data(session, i, d_from_date, latitude, longitude)
+
+            res = await asyncio.gather(report)
+
+        json_res = res[0]
+        report_date = (d_from_date + timedelta(days=i)).strftime('%Y-%m-%d %A')
+        unit_type = '°F' if json_res['flags']['units'] == 'us' else '°C'
+        min_temperature = str(json_res['daily']['data'][0]['apparentTemperatureMin']) + unit_type
+        max_temperature = str(json_res['daily']['data'][0]['apparentTemperatureMax']) + unit_type
+
+        summary = json_res['daily']['data'][0]['summary']
+        icon = json_res['daily']['data'][0]['icon']
+        raining_chance = self.check_raining_chance(json_res)
+
+        report = WeatherReport(report_date, max_temperature, min_temperature, summary, raining_chance, icon)
+        return report
+
+    async def fetch_report_data(self,session, i, d_from_date, latitude, longitude):
+        new_date = (d_from_date + timedelta(days=i)).strftime('%Y-%m-%d')
+        search_date = new_date + "T00:00:00"
+
+        URL = f"https://api.darksky.net/forecast/{DARK_SKY_API_KEY}/{latitude},{longitude},{search_date}?{option_list}"
+        async with session.get(URL) as response:
+            return await response.json()
+
+
 
     @staticmethod
     def convert_location(location):
