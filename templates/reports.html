@@ -1,12 +1,12 @@
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-12">
     {% if location_address %}
         <div class="col-md-8">
             <h4>Location: {{ location_address }}</h4>
         </div>
         <div class="col-md-4">
-            <h5>Location: {{ latitude }}</h5>
-            <h5>Location: {{ longitude }}</h5>
+            <h5>Longitude: {{ longitude }}</h5>
+            <h5>Latitude: {{ latitude }}</h5>
         </div>
     {% else %}
         <div class="col-md-6">
@@ -16,7 +16,7 @@
     {% endif %}
 
     {%if data_error %}
-    <div class="col-md-6">
+    <div class="col-md-12">
         <h4>Error: {{ data_error }}</h4>
     </div>
     {% endif %}
@@ -24,7 +24,7 @@
 </div>
 {% for report in weather_reports %}
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-12">
             <div class="well">
             <div class="row">
                 <div class="col-xs-9">
