@@ -47,16 +47,22 @@ class ForecastController:
             res = await asyncio.gather(report)
 
         json_res = res[0]
-        report_date = (d_from_date + timedelta(days=i)).strftime('%Y-%m-%d %A')
+        print(json_res)
+        report_date = (d_from_date + timedelta(days=i)).strftime('%Y-%m-%d')
+        report_weekday = (d_from_date + timedelta(days=i)).strftime('%A')
         unit_type = '°F' if json_res['flags']['units'] == 'us' else '°C'
-        min_temperature = str(json_res['daily']['data'][0]['apparentTemperatureMin']) + unit_type
-        max_temperature = str(json_res['daily']['data'][0]['apparentTemperatureMax']) + unit_type
+        min_temperature = str(json_res['daily']['data'][0]['apparentTemperatureMin'])
+        max_temperature = str(json_res['daily']['data'][0]['apparentTemperatureMax'])
+
 
         summary = json_res['daily']['data'][0]['summary']
         icon = json_res['daily']['data'][0]['icon']
         raining_chance = self.check_raining_chance(json_res)
 
-        report = WeatherReport(report_date, max_temperature, min_temperature, summary, raining_chance, icon)
+        report = WeatherReport(report_date, max_temperature,
+                               min_temperature, summary,
+                               raining_chance, icon, unit_type,
+                               report_weekday)
         return report
 
     async def fetch_report_data(self,session, i, d_from_date, latitude, longitude):

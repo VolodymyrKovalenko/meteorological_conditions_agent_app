@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from controller import ForecastController
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -42,14 +43,17 @@ def ezw():
         controller = ForecastController()
 
         reports = controller.getWeatherReports(data, latitude, longitude)
+        json_obj = [rep.__dict__ for rep in reports]
+        json_reports = json.loads(json.dumps(json_obj))
+        print(json_reports)
 
-        report_template = render_template('reports.html',
-                                          location_address=location_address,
-                                          latitude=latitude, longitude=longitude,
-                                          weather_reports=reports
-                                          )
+        # report_template = render_template('reports.html',
+        #                                   location_address=location_address,
+        #                                   latitude=latitude, longitude=longitude,
+        #                                   weather_reports=json_reports
+        #                                   )
 
-        return report_template
+        return jsonify(json_reports)
 
 
 if __name__ == '__main__':
