@@ -79,7 +79,11 @@ function createReport(reportData, chart2) {
                     <b>Summary: </b> ${ report.summary }<br/>
                     ${report.raining_chance ? precipitation(report):'' }
                 </div>
-                 <div class="col-xs-3"> <h1>${ reportIcon(report.icon) }</h1></div>
+                 <div class="col-xs-3">
+                  <h1>${ reportIcon(report.icon) }</h1>
+                   <button type="button" class="btn btn-primary" id="report_details"
+                    style="margin-top: 20%; margin-left: 25%;">Details ></button>
+                 </div>
             </div>  
             </div>
         </div>
