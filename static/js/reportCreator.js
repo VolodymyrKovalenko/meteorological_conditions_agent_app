@@ -29,6 +29,56 @@ $(document).ready(function () {
                         $('#result').html(result);
                         let chart2 = create2Chart();
                         createReport(result, chart2);
+                        $.getScript("windRoseChartCreator.js", function(){
+                            alert("Script loaded but not necessarily executed.");
+                            buildWindRoseChart();
+                        });
+
+
+                    }
+                });
+            });
+            $('#get_weather_now').click( function()
+            {
+                var data ={};
+                data['location'] = $('#location').val();
+                data['longitude'] = $('#longitude').val();
+                data['latitude'] = $('#latitude').val();
+
+                // let curent_data = $.datepicker.formatDate("yyyy-mm-dd", Date.now());
+                // let date_str = Date.now();
+                // var today = new Date();
+                // today.toISOString().substring(0, 10);
+                // let today1 = today.datepicker({format: "yyyy-mm-dd"});
+
+                var today = new Date();
+                console.log(today)
+                // var today = rightNow.toISOString().slice(0,10).replace(/-/g,"");
+                //  var today = rightNow.split("T")[0];
+                // console.log(today)
+
+                data['date_from'] = today;
+                data['date_to'] = today;
+
+                $('#result').empty();
+                $('#result').addClass('spinner');
+
+                $.ajax({
+                    type : "POST",
+                    url : "/get_weather_now",
+                    data: JSON.stringify(data),
+                    contentType: 'application/json;charset=UTF-8',
+                    success: function(result)
+                    {
+                        $('#result').removeClass('spinner');
+                        $('#result').html(result);
+                        // let chart2 = create2Chart();
+                        // createReport(result, chart2);
+                        // $.getScript("windRoseChartCreator.js", function(){
+                        //     alert("Script loaded but not necessarily executed.");
+                        //     buildWindRoseChart();
+                        // });
+
 
                     }
                 });
