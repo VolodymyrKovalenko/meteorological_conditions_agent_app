@@ -45,12 +45,6 @@ $(document).ready(function () {
                 data['longitude'] = $('#longitude').val();
                 data['latitude'] = $('#latitude').val();
 
-                // let curent_data = $.datepicker.formatDate("yyyy-mm-dd", Date.now());
-                // let date_str = Date.now();
-                // var today = new Date();
-                // today.toISOString().substring(0, 10);
-                // let today1 = today.datepicker({format: "yyyy-mm-dd"});
-
                 var today = new Date();
                 console.log(today)
                 // var today = rightNow.toISOString().slice(0,10).replace(/-/g,"");
@@ -73,7 +67,7 @@ $(document).ready(function () {
                         $('#result').removeClass('spinner');
                         $('#result').html(result);
                         // let chart2 = create2Chart();
-                        // createReport(result, chart2);
+                        createSingleReport(result);
                         // $.getScript("windRoseChartCreator.js", function(){
                         //     alert("Script loaded but not necessarily executed.");
                         //     buildWindRoseChart();
@@ -91,20 +85,38 @@ function create2Chart() {
         type: 'line',
         data: {
             labels: [],
-            datasets: [{
-                label :'Max temperature',
-                data:[]
-            }]
+            datasets: [
+                {
+                    label :'Max temperature',
+                    data:[]
+                },
+                {
+                    label :'Min temperature',
+                    data:[]
+                },
+                {
+                    label :'Average temperature',
+                    data:[]
+                }
+            ]
         },
         options: null
     });
 }
 
-function addChartData(chart, label, data1) {
+function addMaxTempChart2Data(chart, label, chart_data) {
     chart.data.labels.push(label);
-    chart.data.datasets.forEach((dataset) => {
-        dataset.data.push(data1);
-    });
+    chart.data.datasets[0].data.push(chart_data);
+    console.log(chart.data.datasets);
+    chart.update();
+}
+function addMinTempChart2Data(chart, label, chart_data) {
+    chart.data.datasets[1].data.push(chart_data);
+    console.log(chart.data.datasets);
+    chart.update();
+}
+function addAvarageTempChart2Data(chart, label, chart_data) {
+    chart.data.datasets[2].data.push(chart_data);
     console.log(chart.data.datasets);
     chart.update();
 }
@@ -113,8 +125,9 @@ function createReport(reportData, chart2) {
 
     for (let i in reportData) {
         // console.log(reportData[i].max_temperature)
-        addChartData(chart2, reportData[i].date, reportData[i].max_temperature)
-
+        addMaxTempChart2Data(chart2, reportData[i].date, reportData[i].max_temperature);
+        addMinTempChart2Data(chart2, reportData[i].date, reportData[i].min_temperature);
+        addAvarageTempChart2Data(chart2, reportData[i].date, reportData[i].average_temperature);
     }
     function reportTemplate(report) {
         return `
@@ -140,7 +153,13 @@ function createReport(reportData, chart2) {
         </div>
         `
     }
-    function reportIcon(icon){
+
+    document.getElementById("reportsResult").innerHTML = `
+    ${reportData.map(reportTemplate).join('')}
+    `
+}
+
+function reportIcon(icon){
          if (icon == "clear-day") {
              return `<i class="wi wi-day-sunny"></i>`
          }
@@ -173,13 +192,47 @@ function createReport(reportData, chart2) {
          }
     }
 
-    function precipitation(report){
+function precipitation(report){
+    return `
+    <b>Chance of rain: </b>${ report.raining_chance }<br/>
+    `
+}
+
+function createSingleReport(reportData, chart2) {
+
+    function reportSingleTemplate(report) {
+        var today = new Date();
+        var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+        var time = today.getHours() + ":" + today.getMinutes();
+        var dateTime = date+' '+time;
         return `
-        <b>Chance of rain: </b>${ report.raining_chance }<br/>
+        <div class="row">
+        <div class="col-md-12">
+            <div class="well">
+            <div class="row">
+                <div class="col-xs-9">
+                    <b>Date:</b> ${ dateTime }<br/>
+                    <b>Tempertaure:</b> ${ report.temperature }<br/>
+                    <b>Summary: </b> ${ report.summary }<br/>
+                    ${report.raining_chance ? precipitation(report):'' }
+                    <b>Humidity: </b> ${ report.humidity }<br/>
+                    <b>Pressure: </b> ${ report.pressure }<br/>
+                    <b>Cloud cover: </b> ${ report.cloudCover }<br/>
+                    <b>Wind speed: </b> ${ report.windSpeed }<br/>
+                </div>
+                 <div class="col-xs-3">
+                  <h1>${ reportIcon(report.icon) }</h1>
+<!--                   <button type="button" class="btn btn-primary" id="report_details"-->
+<!--                    style="margin-top: 20%; margin-left: 25%;">Details ></button>-->
+                 </div>
+            </div>  
+            </div>
+        </div>
+        </div>
         `
     }
 
     document.getElementById("reportsResult").innerHTML = `
-    ${reportData.map(reportTemplate).join('')}
+    ${reportData.map(reportSingleTemplate).join('')}
     `
 }

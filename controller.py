@@ -46,7 +46,7 @@ class ForecastController:
             report = self.fetch_report_data(session, i, d_from_date, latitude, longitude)
 
             res = await asyncio.gather(report)
-        print('\n', 'RESULT', res)
+        # print('\n', 'RESULT', res)
         report_json_data = res[0]
         if bulk:
             report = self.set_meteorological_properties(report_json_data, d_from_date, i)
@@ -135,4 +135,8 @@ class ForecastController:
     def set_currently_weather_data(self, json_data):
         data = json_data['currently']
         data['time'] = datetime.utcfromtimestamp(int(data['time'])).strftime('%Y-%m-%d %H:%M:%S')
+        unit_type = '°F' if json_data['flags']['units'] == 'us' else '°C'
+        if unit_type == '°F':
+            data['apparentTemperature'] = self.convert_to_celsius(data['apparentTemperature'])
+            data['temperature'] = self.convert_to_celsius(data['temperature'])
         return data
