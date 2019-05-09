@@ -3,6 +3,9 @@ from geopy.geocoders import Nominatim
 from datetime import datetime,timedelta
 import requests, os
 from config import DARK_SKY_API_KEY
+import asyncio
+import aiohttp
+from wind_converter import WindConverter
 
 option_list = "exclude=currently,minutely,hourly,alerts&units=si"
 
@@ -11,48 +14,104 @@ class ForecastController:
  
     def getLocation(self, input_location):
         location = Nominatim().geocode(input_location, language='en_US')
-        return location
+        return
    
-    def getWeatherReports(self, data, latitude, longitude):
-
-        date_from = data.get('date_from')
-        date_to = data.get('date_to')
-
-        d_from_date = datetime.strptime(date_from, '%Y-%m-%d')
-        d_to_date = datetime.strptime(date_to , '%Y-%m-%d')
-        delta = d_to_date - d_from_date
+    def getWeatherReports(self, data, latitude, longitude, bulk=True):
 
         weather_reports = []
 
-        for i in range(delta.days+1):
-            new_date = (d_from_date + timedelta(days=i)).strftime('%Y-%m-%d')
+        date_from = data.get('date_from')
+        date_to = data.get('date_to')
+        if not bulk:
+            date_from = date_from.split('T')[0]
+            date_to = date_to.split('T')[0]
+        d_from_date = datetime.strptime(date_from, '%Y-%m-%d')
+        d_to_date = datetime.strptime(date_to, '%Y-%m-%d')
+        delta = d_to_date - d_from_date
 
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        reports = [(self.get_async_report(i, d_from_date, latitude, longitude, delta, bulk))
+                   for i in range(delta.days + 1)]
 
-            search_date = new_date+"T00:00:00"
-            response = requests.get("https://api.darksky.net/forecast/"+DARK_SKY_API_KEY+"/"+latitude+","+longitude+","+search_date+"?"+option_list)
-            json_res = response.json()
-            print(json_res)
-
-            report_date = (d_from_date + timedelta(days=i)).strftime('%Y-%m-%d %A')
-            unit_type = '°F' if json_res['flags']['units'] == 'us' else '°C'
-            min_temperature = str(json_res['daily']['data'][0]['apparentTemperatureMin'])+unit_type
-            max_temperature = str(json_res['daily']['data'][0]['apparentTemperatureMax'])+unit_type
-
-            summary = json_res['daily']['data'][0]['summary']
-            icon = json_res['daily']['data'][0]['icon']
-            raining_chance = self.check_raining_chance(json_res)
-
-            report = WeatherReport(report_date, max_temperature, min_temperature, summary, raining_chance, icon)
+        reports = loop.run_until_complete(asyncio.gather(*reports))
+        for report in reports:
 
             weather_reports.append(report)
 
         return weather_reports
+
+    async def get_async_report(self, i, d_from_date, latitude, longitude, delta, bulk):
+
+        async with aiohttp.ClientSession() as session:
+            report = self.fetch_report_data(session, i, d_from_date, latitude, longitude)
+
+            res = await asyncio.gather(report)
+        print('\n', 'RESULT', res)
+        report_json_data = res[0]
+        if bulk:
+            report = self.set_meteorological_properties(report_json_data, d_from_date, i)
+        else:
+            report = self.set_currently_weather_data(report_json_data)
+
+        return report
+
+    async def fetch_report_data(self,session, i, d_from_date, latitude, longitude):
+        new_date = (d_from_date + timedelta(days=i)).strftime('%Y-%m-%d')
+        search_date = new_date + "T00:00:00"
+
+        # URL = f"https://api.darksky.net/forecast/{DARK_SKY_API_KEY}/{latitude},{longitude},{search_date}?{option_list}"
+        URL = f"https://api.darksky.net/forecast/{DARK_SKY_API_KEY}/{latitude},{longitude},{search_date}"
+        async with session.get(URL) as response:
+            return await response.json()
 
     @staticmethod
     def convert_location(location):
         latitude = str(location.latitude)
         longitude = str(location.longitude)
         return latitude, longitude
+
+    def set_meteorological_properties(self, json_data, d_from_date, i):
+        report_date = (d_from_date + timedelta(days=i)).strftime('%Y-%m-%d')
+        report_weekday = (d_from_date + timedelta(days=i)).strftime('%A')
+        unit_type = '°F' if json_data['flags']['units'] == 'us' else '°C'
+
+        min_temperature = str(json_data['daily']['data'][0]['apparentTemperatureMin'])
+        max_temperature = str(json_data['daily']['data'][0]['apparentTemperatureMax'])
+
+        if unit_type == '°F':
+            min_temperature = self.convert_to_celsius(min_temperature)
+            max_temperature = self.convert_to_celsius(max_temperature)
+
+        summary = json_data['daily']['data'][0]['summary']
+        icon = json_data['daily']['data'][0]['icon']
+        raining_chance = self.check_raining_chance(json_data)
+        average_temperature = (float(min_temperature) + float(max_temperature)) / 2
+        humidity = json_data['daily']['data'][0]['humidity']
+        sunrise_data = json_data['daily']['data'][0]['sunriseTime']
+        sunrise_time = datetime.utcfromtimestamp(int(sunrise_data)).strftime('%Y-%m-%d %H:%M:%S')
+        sunset_data = json_data['daily']['data'][0]['sunsetTime']
+        sunset_time = datetime.utcfromtimestamp(int(sunset_data)).strftime('%Y-%m-%d %H:%M:%S')
+        wind_speed = json_data['daily']['data'][0]['windSpeed']
+        wind_bearing = json_data['daily']['data'][0]['windBearing']
+        wind_angel = WindConverter.convert_to_wind_angel(wind_bearing)
+
+        cloud_cover = json_data['daily']['data'][0]['cloudCover']
+        hourly_data = None
+        if 'hourly' in json_data:
+            for item in json_data['hourly']['data']:
+                item['time'] = datetime.utcfromtimestamp(int(item['time'])).strftime('%Y-%m-%d')
+            hourly_data = json_data['hourly']['data']
+
+        report = WeatherReport(report_date, max_temperature,min_temperature, summary,
+                               raining_chance, icon, unit_type,report_weekday, average_temperature,
+                               humidity, sunrise_time, sunset_time, wind_speed, wind_bearing, cloud_cover,
+                               wind_angel, hourly_data)
+        return report
+
+    @staticmethod
+    def convert_to_celsius(fahrenheit_temp):
+        return round(((float(fahrenheit_temp) - 32) / 1.8), 2)
 
     @staticmethod
     def check_raining_chance(json_res):
@@ -63,3 +122,12 @@ class ForecastController:
 
             raining_chance = precip_prob
         return raining_chance
+
+    def set_currently_weather_data(self, json_data):
+        data = json_data['currently']
+        data['time'] = datetime.utcfromtimestamp(int(data['time'])).strftime('%Y-%m-%d %H:%M:%S')
+        unit_type = '°F' if json_data['flags']['units'] == 'us' else '°C'
+        if unit_type == '°F':
+            data['apparentTemperature'] = self.convert_to_celsius(data['apparentTemperature'])
+            data['temperature'] = self.convert_to_celsius(data['temperature'])
+        return data
