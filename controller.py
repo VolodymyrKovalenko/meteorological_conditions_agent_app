@@ -5,6 +5,7 @@ import requests, os
 from config import DARK_SKY_API_KEY
 import asyncio
 import aiohttp
+from wind_converter import WindConverter
 
 option_list = "exclude=currently,minutely,hourly,alerts&units=si"
 
@@ -46,7 +47,7 @@ class ForecastController:
             report = self.fetch_report_data(session, i, d_from_date, latitude, longitude)
 
             res = await asyncio.gather(report)
-        # print('\n', 'RESULT', res)
+        print('\n', 'RESULT', res)
         report_json_data = res[0]
         if bulk:
             report = self.set_meteorological_properties(report_json_data, d_from_date, i)
@@ -93,14 +94,19 @@ class ForecastController:
         sunset_time = datetime.utcfromtimestamp(int(sunset_data)).strftime('%Y-%m-%d %H:%M:%S')
         wind_speed = json_data['daily']['data'][0]['windSpeed']
         wind_bearing = json_data['daily']['data'][0]['windBearing']
-        wind_angel = self.convert_to_wind_angel(wind_bearing)
+        wind_angel = WindConverter.convert_to_wind_angel(wind_bearing)
 
         cloud_cover = json_data['daily']['data'][0]['cloudCover']
+        hourly_data = None
+        if 'hourly' in json_data:
+            for item in json_data['hourly']['data']:
+                item['time'] = datetime.utcfromtimestamp(int(item['time'])).strftime('%Y-%m-%d')
+            hourly_data = json_data['hourly']['data']
 
         report = WeatherReport(report_date, max_temperature,min_temperature, summary,
                                raining_chance, icon, unit_type,report_weekday, average_temperature,
                                humidity, sunrise_time, sunset_time, wind_speed, wind_bearing, cloud_cover,
-                               wind_angel)
+                               wind_angel, hourly_data)
         return report
 
     @staticmethod
@@ -116,21 +122,6 @@ class ForecastController:
 
             raining_chance = precip_prob
         return raining_chance
-
-    @staticmethod
-    def convert_to_wind_angel(wind_bearing):
-        return {
-            wind_bearing > 360: 'error',
-            337.5 <= wind_bearing <= 360: 'N',
-            0 <= wind_bearing < 22.5: 'N',
-            22.5 <= wind_bearing < 67.5: 'NE',
-            67.5 <= wind_bearing < 112.5: 'E',
-            112.5 <= wind_bearing < 157.5: 'ES',
-            157.5 <= wind_bearing < 202.5: 'S',
-            202.5 <= wind_bearing < 247.5: 'WS',
-            247.5 <= wind_bearing < 292.5: 'W',
-            292.5 <= wind_bearing < 337.5: 'WN'
-        }[True]
 
     def set_currently_weather_data(self, json_data):
         data = json_data['currently']

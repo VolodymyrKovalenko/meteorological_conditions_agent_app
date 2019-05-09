@@ -2,7 +2,7 @@ class WeatherReport:
 
     def __init__(self, date, max_temperature, min_temperature, summary, raining_chance, icon, unit_type, weekday,
                  average_temperature, humidity, sunrise_time, sunset_time, wind_speed, wind_bearing, cloud_cover,
-                 wind_angel):
+                 wind_angel, hourly_data):
         self.date = date
         self.max_temperature = max_temperature
         self.min_temperature = min_temperature
@@ -19,3 +19,4 @@ class WeatherReport:
         self.wind_bearing = wind_bearing
         self.cloud_cover = cloud_cover
         self.wind_angel = wind_angel
+        self.hourly_data = hourly_data

@@ -88,19 +88,36 @@ function create2Chart() {
             datasets: [
                 {
                     label :'Max temperature',
-                    data:[]
+                    data:[],
+                    borderColor: [
+                    'rgba(255,16,21,0.82)'
+                        ]
                 },
                 {
                     label :'Min temperature',
-                    data:[]
+                    data:[],
+                     borderColor: [
+                    'rgba(0,45,255,0.74)'
+                        ]
                 },
                 {
                     label :'Average temperature',
-                    data:[]
+                    data:[],
+                     borderColor: [
+                    'rgba(251,255,62,0.93)'
+                        ]
                 }
             ]
         },
-        options: null
+        options : {
+            title: "Company Performance"
+        }
+
+
+                // vAxis: { title: "°C" },
+                // legend:{position:'top',alignment:'start'},
+                // hAxis: {title: "Date"}
+
     });
 }
 
@@ -125,9 +142,9 @@ function createReport(reportData, chart2) {
 
     for (let i in reportData) {
         // console.log(reportData[i].max_temperature)
-        addMaxTempChart2Data(chart2, reportData[i].date, reportData[i].max_temperature);
         addMinTempChart2Data(chart2, reportData[i].date, reportData[i].min_temperature);
         addAvarageTempChart2Data(chart2, reportData[i].date, reportData[i].average_temperature);
+        addMaxTempChart2Data(chart2, reportData[i].date, reportData[i].max_temperature);
     }
     function reportTemplate(report) {
         return `
