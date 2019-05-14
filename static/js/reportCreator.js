@@ -29,11 +29,8 @@ $(document).ready(function () {
                         $('#result').html(result);
                         let chart2 = create2Chart();
                         createReport(result, chart2);
-                        $.getScript("windRoseChartCreator.js", function(){
-                            alert("Script loaded but not necessarily executed.");
-                            buildWindRoseChart();
-                        });
-
+                        drawTemperatureChart(result);
+                        buildWindRoseChart(result);
 
                     }
                 });
@@ -142,26 +139,39 @@ function createReport(reportData, chart2) {
 
     for (let i in reportData) {
         // console.log(reportData[i].max_temperature)
-        addMinTempChart2Data(chart2, reportData[i].date, reportData[i].min_temperature);
-        addAvarageTempChart2Data(chart2, reportData[i].date, reportData[i].average_temperature);
-        addMaxTempChart2Data(chart2, reportData[i].date, reportData[i].max_temperature);
+        addMinTempChart2Data(chart2, reportData[i].date, reportData[i].daily_data.temperatureMin);
+        addAvarageTempChart2Data(chart2, reportData[i].date, reportData[i].daily_data.averageTemperature);
+        addMaxTempChart2Data(chart2, reportData[i].date, reportData[i].daily_data.temperatureMax);
     }
+
+    let idCounter = 0;
+
+
+
     function reportTemplate(report) {
+        idCounter++;
         return `
-        <div class="row">
+        <div class="row" id=report_id_${idCounter}>
         <div class="col-md-12">
             <div class="well">
             <div class="row">
                 <div class="col-xs-9">
                     <b>Date:</b> ${ report.date } ${report.weekday}<br/>
-                    <b>Max Tempertaure:</b> ${ report.max_temperature }<br/>
-                    <b>Min Tempertaure:</b> ${ report.min_temperature }<br/>
-                    <b>Summary: </b> ${ report.summary }<br/>
-                    ${report.raining_chance ? precipitation(report):'' }
+                    <b>Summary: </b> ${ report.daily_data.summary }<br/>
+                    <b>Average tempertaure:</b> ${ report.daily_data.averageTemperature }<br/>
+                     <b>Wind: &#8599</b> ${ report.daily_data.generalWindAngel } ${report.daily_data.windSpeed} m/s<br/>
+                    
+                    ${report.daily_data.precipProbability ? precipitation(report):'' }
+                    <div class="to-hide">
+                        <b>Max Temperature:</b> ${ report.daily_data.temperatureMax }<br/>
+                        <b>Min Temperture:</b> ${ report.daily_data.temperatureMin }<br/>                        
+                        <b>Cloud cover:</b> ${ report.daily_data.cloudCover }<br/>
+                        <b>Humidity:</b> ${ report.daily_data.humidity }<br/>
+                    </div>
                 </div>
                  <div class="col-xs-3">
-                  <h1>${ reportIcon(report.icon) }</h1>
-                   <button type="button" class="btn btn-primary" id="report_details"
+                  <h1>${ reportIcon(report.daily_data.icon) }</h1>
+                   <button onclick="showDetails(${idCounter})" type="button" class="btn btn-primary" id="reportsDetails"
                     style="margin-top: 20%; margin-left: 25%;">Details ></button>
                  </div>
             </div>  
@@ -174,6 +184,17 @@ function createReport(reportData, chart2) {
     document.getElementById("reportsResult").innerHTML = `
     ${reportData.map(reportTemplate).join('')}
     `
+}
+
+ function showDetails(id) {
+        let el = document.getElementById('report_id_'+id).getElementsByClassName('to-hide')[0];
+        el.style.display = el.style.display !== 'block' ? 'block' : 'none';
+    }
+
+function reportDetailsEvent(){
+    document.getElementById('reportsDetails').addEventListener('click', function() {
+  document.getElementById('multipleReportData').classList.toggle('expand');
+});
 }
 
 function reportIcon(icon){
@@ -211,7 +232,7 @@ function reportIcon(icon){
 
 function precipitation(report){
     return `
-    <b>Chance of rain: </b>${ report.raining_chance }<br/>
+    <b>Chance of rain: </b>${ report.daily_data.precipProbability }<br/>
     `
 }
 

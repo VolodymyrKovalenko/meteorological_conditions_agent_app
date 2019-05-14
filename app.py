@@ -45,7 +45,6 @@ def ezw():
         reports = controller.getWeatherReports(data, latitude, longitude)
         json_obj = [rep.__dict__ for rep in reports]
         json_reports = json.loads(json.dumps(json_obj))
-        print(json_reports)
 
         return jsonify(json_reports)
 
