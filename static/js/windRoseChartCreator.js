@@ -21,7 +21,6 @@ function buildWindRoseChart(reportData) {
     $('#windRoseChartContainer').highcharts({
         series: [{
             data: windDataJSON,
-            labels: 'aaaaa',
         }],
         chart: {
             polar: true,

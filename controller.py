@@ -89,6 +89,8 @@ class ForecastController:
         daily_data['temperatureMax'] = str(max_temperature)
         daily_data['generalTemperature'] = int(round(average_temperature))
 
+        daily_data['pressure_mmHg'] = round(daily_data['pressure'] * 0.75006)
+
         daily_data['sunriseTime'] = datetime.utcfromtimestamp(
             int(daily_data['sunriseTime'])).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -115,6 +117,7 @@ class ForecastController:
     def set_currently_weather_data(self, json_data):
         data = json_data['currently']
         data['time'] = datetime.utcfromtimestamp(int(data['time'])).strftime('%Y-%m-%d %H:%M:%S')
+        data['pressure_mmHg'] = round(data['pressure'] * 0.75006)
         unit_type = '°F' if json_data['flags']['units'] == 'us' else '°C'
         if unit_type == '°F':
             data['apparentTemperature'] = self.convert_to_celsius(data['apparentTemperature'])

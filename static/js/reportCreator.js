@@ -31,6 +31,7 @@ $(document).ready(function () {
                         createReport(result, chart2);
                         drawTemperatureChart(result);
                         buildWindRoseChart(result);
+                        drawPressureChart(result)
 
                     }
                 });
@@ -158,15 +159,16 @@ function createReport(reportData, chart2) {
                 <div class="col-xs-9">
                     <b>Date:</b> ${ report.date } ${report.weekday}<br/>
                     <b>Summary: </b> ${ report.daily_data.summary }<br/>
-                    <b>Average tempertaure:</b> ${ report.daily_data.averageTemperature }<br/>
+                    <b>Average tempertaure:</b> ${ report.daily_data.averageTemperature } °C<br/>
                      <b>Wind: &#8599</b> ${ report.daily_data.generalWindAngel } ${report.daily_data.windSpeed} m/s<br/>
-                    
+                    <b>Pressure:</b> ${report.daily_data.pressure_mmHg} mm<br/>
                     ${report.daily_data.precipProbability ? precipitation(report):'' }
                     <div class="to-hide">
-                        <b>Max Temperature:</b> ${ report.daily_data.temperatureMax }<br/>
-                        <b>Min Temperture:</b> ${ report.daily_data.temperatureMin }<br/>                        
+                        <b>Max Temperature:</b> ${ report.daily_data.temperatureMax } °C<br/>
+                        <b>Min Temperture:</b> ${ report.daily_data.temperatureMin } °C<br/>                        
                         <b>Cloud cover:</b> ${ report.daily_data.cloudCover }<br/>
                         <b>Humidity:</b> ${ report.daily_data.humidity }<br/>
+                        
                     </div>
                 </div>
                  <div class="col-xs-3">
@@ -250,11 +252,11 @@ function createSingleReport(reportData, chart2) {
             <div class="row">
                 <div class="col-xs-9">
                     <b>Date:</b> ${ dateTime }<br/>
-                    <b>Tempertaure:</b> ${ report.temperature }<br/>
+                    <b>Tempertaure:</b> ${ report.temperature } °C<br/>
                     <b>Summary: </b> ${ report.summary }<br/>
                     ${report.raining_chance ? precipitation(report):'' }
                     <b>Humidity: </b> ${ report.humidity }<br/>
-                    <b>Pressure: </b> ${ report.pressure }<br/>
+                    <b>Pressure:</b>${report.pressure_mmHg} mm<br/>
                     <b>Cloud cover: </b> ${ report.cloudCover }<br/>
                     <b>Wind speed: </b> ${ report.windSpeed }<br/>
                 </div>
