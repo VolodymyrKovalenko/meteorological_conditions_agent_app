@@ -173,11 +173,13 @@ function createReport(reportData, chart2) {
                 </div>
                  <div class="col-xs-3">
                   <h1>${ reportIcon(report.daily_data.icon) }</h1>
-                   <button onclick="showDetails(${idCounter})" type="button" class="btn btn-primary" id="reportsDetails"
-                    style="margin-top: 20%; margin-left: 25%;">Details ></button>
+                   
                  </div>
-            </div>  
             </div>
+               <button onclick="showDetails(${idCounter})" type="button" class="btn details " id="reportsDetails"
+                ></button>  
+            </div>
+         
         </div>
         </div>
         `
@@ -191,6 +193,12 @@ function createReport(reportData, chart2) {
  function showDetails(id) {
         let el = document.getElementById('report_id_'+id).getElementsByClassName('to-hide')[0];
         el.style.display = el.style.display !== 'block' ? 'block' : 'none';
+        let bntEl = document.getElementById('report_id_'+id).getElementsByClassName('btn ')[0];
+        if( bntEl.classList.contains('open')){
+            bntEl.classList.remove('open');
+        } else{
+            bntEl.classList.add('open');
+        }
     }
 
 function reportDetailsEvent(){

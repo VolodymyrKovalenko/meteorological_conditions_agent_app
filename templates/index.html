@@ -44,9 +44,43 @@
         height: 85%;
       }
 
+      .well{
+          position: relative;
+      }
 
       .to-hide{
           display: none;
+      }
+      .details{
+          position: absolute;
+            margin: 0;
+            bottom: 0;
+            width: 100%;
+            left: 0;
+            height: 20px;
+            padding: 0;
+            background: #dad9d7;
+            border: none;
+      }
+      
+      .details:hover{
+          background-color: #428bca;
+      }
+      
+
+      .details:after{
+          content: '>';
+          color: black;
+            position: absolute;
+            line-height: 20px;
+            transform: rotate(90deg);
+            width: 10px;
+            right: calc(50% - 5px);
+          top: 1px;
+      }
+      .open.details:after{
+          content: '<';
+          /*transform: rotate(270deg);*/
       }
 
   </style>
