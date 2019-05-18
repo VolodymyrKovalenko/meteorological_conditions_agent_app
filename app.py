@@ -31,21 +31,20 @@ def ezw():
 
             if geo_location is None:
                 address = "Unknown location"
-                return render_template('reports.html', weather_address=address)
+                return jsonify(error=400, text=address), 400
             latitude, longitude = controller.convert_location(geo_location)
             address = geo_location.address
             location_address = address
 
         else:
             data_error = "Enter correct data pls"
-            return render_template('reports.html', data_error=data_error)
+            return jsonify(error=400, text=data_error), 400
 
         controller = ForecastController()
 
         reports = controller.getWeatherReports(data, latitude, longitude)
         json_obj = [rep.__dict__ for rep in reports]
         json_reports = json.loads(json.dumps(json_obj))
-        print(json_reports)
 
         return jsonify(json_reports)
 

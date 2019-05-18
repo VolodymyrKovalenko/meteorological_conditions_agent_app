@@ -37,7 +37,8 @@ class ForecastController:
         reports = loop.run_until_complete(asyncio.gather(*reports))
         for report in reports:
 
-            weather_reports.append(report)
+            if report:
+                weather_reports.append(report)
 
         return weather_reports
 
@@ -53,7 +54,6 @@ class ForecastController:
             report = self.set_meteorological_properties(report_json_data, d_from_date, i)
         else:
             report = self.set_currently_weather_data(report_json_data)
-
         return report
 
     async def fetch_report_data(self,session, i, d_from_date, latitude, longitude):
@@ -72,60 +72,57 @@ class ForecastController:
         return latitude, longitude
 
     def set_meteorological_properties(self, json_data, d_from_date, i):
-        report_date = (d_from_date + timedelta(days=i)).strftime('%Y-%m-%d')
-        report_weekday = (d_from_date + timedelta(days=i)).strftime('%A')
+        date = (d_from_date + timedelta(days=i)).strftime('%Y-%m-%d')
+        weekday = (d_from_date + timedelta(days=i)).strftime('%A')
         unit_type = '°F' if json_data['flags']['units'] == 'us' else '°C'
+        if 'daily' not in json_data:
+            return
+        daily_data = json_data['daily']['data'][0]
 
-        min_temperature = str(json_data['daily']['data'][0]['apparentTemperatureMin'])
-        max_temperature = str(json_data['daily']['data'][0]['apparentTemperatureMax'])
+        min_temperature = str(daily_data['temperatureMin'])
+        max_temperature = str(daily_data['temperatureMax'])
 
         if unit_type == '°F':
             min_temperature = self.convert_to_celsius(min_temperature)
             max_temperature = self.convert_to_celsius(max_temperature)
 
-        summary = json_data['daily']['data'][0]['summary']
-        icon = json_data['daily']['data'][0]['icon']
-        raining_chance = self.check_raining_chance(json_data)
-        average_temperature = (float(min_temperature) + float(max_temperature)) / 2
-        humidity = json_data['daily']['data'][0]['humidity']
-        sunrise_data = json_data['daily']['data'][0]['sunriseTime']
-        sunrise_time = datetime.utcfromtimestamp(int(sunrise_data)).strftime('%Y-%m-%d %H:%M:%S')
-        sunset_data = json_data['daily']['data'][0]['sunsetTime']
-        sunset_time = datetime.utcfromtimestamp(int(sunset_data)).strftime('%Y-%m-%d %H:%M:%S')
-        wind_speed = json_data['daily']['data'][0]['windSpeed']
-        wind_bearing = json_data['daily']['data'][0]['windBearing']
-        wind_angel = WindConverter.convert_to_wind_angel(wind_bearing)
+        average_temperature = round(((float(min_temperature) + float(max_temperature)) / 2), 2)
+        daily_data['averageTemperature'] = str(average_temperature)
+        daily_data['temperatureMin'] = str(min_temperature)
+        daily_data['temperatureMax'] = str(max_temperature)
+        daily_data['generalTemperature'] = int(round(average_temperature))
 
-        cloud_cover = json_data['daily']['data'][0]['cloudCover']
+        daily_data['pressure_mmHg'] = 760
+        if 'pressure' in daily_data:
+            daily_data['pressure_mmHg'] = round(daily_data['pressure'] * 0.75006)
+
+        daily_data['sunriseTime'] = datetime.utcfromtimestamp(
+            int(daily_data['sunriseTime'])).strftime('%Y-%m-%d %H:%M:%S')
+
+        daily_data['sunsetTime'] = datetime.utcfromtimestamp(
+            int(daily_data['sunsetTime'])).strftime('%Y-%m-%d %H:%M:%S')
+
+        wind_bearing = daily_data['windBearing']
+        general_wind_angel = WindConverter.convert_to_wind_angel(wind_bearing)
+        daily_data['generalWindAngel'] = general_wind_angel
+
         hourly_data = None
         if 'hourly' in json_data:
             for item in json_data['hourly']['data']:
                 item['time'] = datetime.utcfromtimestamp(int(item['time'])).strftime('%Y-%m-%d')
             hourly_data = json_data['hourly']['data']
 
-        report = WeatherReport(report_date, max_temperature,min_temperature, summary,
-                               raining_chance, icon, unit_type,report_weekday, average_temperature,
-                               humidity, sunrise_time, sunset_time, wind_speed, wind_bearing, cloud_cover,
-                               wind_angel, hourly_data)
+        report = WeatherReport(date, unit_type, weekday, hourly_data, daily_data)
         return report
 
     @staticmethod
     def convert_to_celsius(fahrenheit_temp):
         return round(((float(fahrenheit_temp) - 32) / 1.8), 2)
 
-    @staticmethod
-    def check_raining_chance(json_res):
-        raining_chance = None
-        if 'precipProbability' in json_res['daily']['data'][0] and 'precipType' in json_res['daily']['data'][0]:
-            precip_type = json_res['daily']['data'][0]['precipType']
-            precip_prob = json_res['daily']['data'][0]['precipProbability']
-
-            raining_chance = precip_prob
-        return raining_chance
-
     def set_currently_weather_data(self, json_data):
         data = json_data['currently']
         data['time'] = datetime.utcfromtimestamp(int(data['time'])).strftime('%Y-%m-%d %H:%M:%S')
+        data['pressure_mmHg'] = round(data['pressure'] * 0.75006)
         unit_type = '°F' if json_data['flags']['units'] == 'us' else '°C'
         if unit_type == '°F':
             data['apparentTemperature'] = self.convert_to_celsius(data['apparentTemperature'])
