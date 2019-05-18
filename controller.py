@@ -37,7 +37,8 @@ class ForecastController:
         reports = loop.run_until_complete(asyncio.gather(*reports))
         for report in reports:
 
-            weather_reports.append(report)
+            if report:
+                weather_reports.append(report)
 
         return weather_reports
 
@@ -74,6 +75,8 @@ class ForecastController:
         date = (d_from_date + timedelta(days=i)).strftime('%Y-%m-%d')
         weekday = (d_from_date + timedelta(days=i)).strftime('%A')
         unit_type = '°F' if json_data['flags']['units'] == 'us' else '°C'
+        if 'daily' not in json_data:
+            return
         daily_data = json_data['daily']['data'][0]
 
         min_temperature = str(daily_data['temperatureMin'])
@@ -83,13 +86,15 @@ class ForecastController:
             min_temperature = self.convert_to_celsius(min_temperature)
             max_temperature = self.convert_to_celsius(max_temperature)
 
-        average_temperature = round(((float(min_temperature) + float(max_temperature)) / 2), 3)
+        average_temperature = round(((float(min_temperature) + float(max_temperature)) / 2), 2)
         daily_data['averageTemperature'] = str(average_temperature)
         daily_data['temperatureMin'] = str(min_temperature)
         daily_data['temperatureMax'] = str(max_temperature)
         daily_data['generalTemperature'] = int(round(average_temperature))
 
-        daily_data['pressure_mmHg'] = round(daily_data['pressure'] * 0.75006)
+        daily_data['pressure_mmHg'] = 760
+        if 'pressure' in daily_data:
+            daily_data['pressure_mmHg'] = round(daily_data['pressure'] * 0.75006)
 
         daily_data['sunriseTime'] = datetime.utcfromtimestamp(
             int(daily_data['sunriseTime'])).strftime('%Y-%m-%d %H:%M:%S')

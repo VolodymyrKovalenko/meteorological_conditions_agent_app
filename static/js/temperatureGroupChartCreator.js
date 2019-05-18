@@ -36,9 +36,9 @@ function drawTemperatureChart(reportData) {
 
 function drawAverage(resAverageData) {
     console.log(resAverageData);
-    let dataToVisualization = [['Temperature', 'Average', {role: 'style'}]];
+    let dataToVisualization = [['Average Temperature', 'Repeatable', {role: 'style'}]];
     for (let i in resAverageData) {
-        let dt = [i + "°C", resAverageData[i], 'stroke-width: 3;' + 'stroke-color: #10ff1b;'];
+        let dt = [i + "°C", resAverageData[i], 'stroke-width: 2;' + 'stroke-color: #10ff1b;'];
         console.log(dt);
         dataToVisualization.push(dt)
     }
@@ -49,12 +49,11 @@ function drawAverage(resAverageData) {
 
 }
 
-
 function drawMax(resMaxData) {
     console.log(resMaxData);
-    let dataToVisualization = [['Temperature', 'Max', {role: 'style'}]];
+    let dataToVisualization = [['Max Temperature', 'Repeatable', {role: 'style'}]];
     for (let i in resMaxData) {
-        let dt = [i + "°C", resMaxData[i], 'stroke-width: 3;' + 'stroke-color: #ff1015;'];
+        let dt = [i + "°C", resMaxData[i], 'stroke-width: 2;' + 'stroke-color: #ff1015;'];
         dataToVisualization.push(dt)
     }
     let title2 = 'Max temperature chart repeatable dynamic';
@@ -64,7 +63,7 @@ function drawMax(resMaxData) {
 
 function drawMin(resMinData) {
     console.log(resMinData);
-    let dataToVisualization = [['Temperature', 'Max']];
+    let dataToVisualization = [['Min Temperature', 'Repeatable']];
     for (let i in resMinData){
         let dt = [i + "°C", resMinData[i]];
 

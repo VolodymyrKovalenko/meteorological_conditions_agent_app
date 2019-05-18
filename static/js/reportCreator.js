@@ -31,8 +31,14 @@ $(document).ready(function () {
                         createReport(result, chart2);
                         drawTemperatureChart(result);
                         buildWindRoseChart(result);
-                        drawPressureChart(result)
+                        drawSLineSpeedChart(result);
+                        drawPressureChart(result);
+                        drawHumidityChart(result);
+                        precipProbabilityChart(result);
 
+                    },
+                    error: function(error, text){
+                       alert('Enter correct data please')
                     }
                 });
             });

@@ -17,7 +17,7 @@ function drawLineChart(dataToVisualization) {
 
   var data = new google.visualization.DataTable();
   data.addColumn('string', 'Day');
-  data.addColumn('number', 'Pressure mm Hg');
+  data.addColumn('number', 'mm Hg');
 
   data.addRows(dataToVisualization);
 

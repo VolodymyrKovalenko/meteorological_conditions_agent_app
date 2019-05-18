@@ -11,6 +11,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script src="{{url_for('static', filename='js/windRoseChartCreator.js')}}"></script>
+    <script src="{{url_for('static', filename='js/windSpeedBarChart.js')}}"></script>
+    <script src="{{url_for('static', filename='js/humidityColumnChart.js')}}"></script>
+    <script src="{{url_for('static', filename='js/precipProbabilityChart.js')}}"></script>
     <script src="{{url_for('static', filename='js/pressureLineChart.js')}}"></script>
     <script src="{{url_for('static', filename='js/temperatureGroupChartCreator.js')}}"></script>
     <script src="{{url_for('static', filename='js/reportCreator.js')}}"></script>
@@ -150,11 +153,14 @@
                 <div id="map"></div>
 <!--                <canvas id="myChart" width="400" height="400"></canvas>-->
                 <canvas id="myChart2" width="400" height="400"></canvas>
-                <div id="average_temperature_group_div" width="400" height="400"></div>
-                <div id="min_temperature_group_div" width="400" height="400"></div>
-                <div id="max_temperature_group_div" width="400" height="400"></div>
+                <div id="average_temperature_group_div"></div>
+                <div id="min_temperature_group_div"></div>
+                <div id="max_temperature_group_div"></div>
                 <div id="windRoseChartContainer" style="width: 500px; height: 500px; margin: 0 auto"></div>
-                <div id="pressureChartDiv" style="width: 500px; height: 500px; margin: 0 auto"></div>
+                <div id="windSpeedBArChartDiv"></div>
+                <div id="pressureChartDiv" style="width: 500px; height: 410px; margin-top: 10px;"></div>
+                <div id="humidityLineChartDiv"></div>
+                <div id="precipProbabilityDiv"></div>
 
 
             </div>
